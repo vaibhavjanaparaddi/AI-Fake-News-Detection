@@ -1,15 +1,23 @@
 from flask import Flask, render_template, request
 import joblib
 import re
+import os
+import nltk
 from nltk.corpus import stopwords
 
 app = Flask(__name__)
+
+# Download stopwords if not already available
+try:
+    stop_words = set(stopwords.words("english"))
+except LookupError:
+    nltk.download("stopwords")
+    stop_words = set(stopwords.words("english"))
 
 # Load model and vectorizer
 model = joblib.load("model/model.pkl")
 vectorizer = joblib.load("model/vectorizer.pkl")
 
-stop_words = set(stopwords.words("english"))
 
 def clean_text(text):
     text = text.lower()
@@ -44,7 +52,6 @@ def predict():
 
     prediction = model.predict(vector)[0]
 
-    # Get probability if the model supports it
     if hasattr(model, "predict_proba"):
         probability = model.predict_proba(vector)[0]
         confidence = round(max(probability) * 100, 2)
@@ -65,8 +72,6 @@ def predict():
         color=color
     )
 
-
-import os
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
